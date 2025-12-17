@@ -1,15 +1,22 @@
 <?php
 
+
 include 'config.php';
 session_start();
 
-// page redirect
-$usermail = "";
-$usermail = $_SESSION['usermail'];
-if ($usermail == true) {
-} else {
-  header("location: index.php");
+if (!isset($_SESSION['usermail'], $_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
 }
+
+$usermail   = $_SESSION['usermail'];
+$user_id    = $_SESSION['user_id'];
+$firstname  = $_SESSION['userfirstname'];
+$lastname   = $_SESSION['userlastname'];
+
+
+
+
 
 ?>
 
@@ -152,6 +159,7 @@ if ($usermail == true) {
       border-radius: 15px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
       animation: fadeIn 0.4s ease-in-out;
+      margin: auto;
     }
 
     .form-step {
@@ -208,6 +216,15 @@ if ($usermail == true) {
     #step2::-webkit-scrollbar-track {
       background: #f1f1f1;
     }
+
+    /* ===== FEEDBACK PANEL STYLES ===== */
+    #feedbackpanel textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 
@@ -222,6 +239,7 @@ if ($usermail == true) {
       <li><a href="#secondsection">Rooms</a></li>
       <li><a href="#thirdsection">Facilites</a></li>
       <li><a href="#contactus">contact us</a></li>
+      <li><a onclick="openFeedback()">feedback</a></li>
       <a href="./logout.php"><button class="btn btn-danger">Logout</button></a>
     </ul>
   </nav>
@@ -285,19 +303,23 @@ if ($usermail == true) {
 
             <select name="RoomType" class="selectinput">
               <option selected>Room Type</option>
-              <option>Superior</option>
-              <option>Deluxe</option>
-              <option>Single</option>
+              <option value="Superior Room">Superior Room</option>
+              <option value="Deluxe Room">Deluxe Room</option>
+              <option value="Single Room">Single Room</option>
+              <option value="Guest House">Guest House</option>
             </select>
 
             <select name="Bed" class="selectinput">
               <option selected>Bed Type</option>
-              <option>Single</option>
-              <option>Double</option>
-              <option>Queen</option>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Queen">Queen</option>
+              <option value="Triple">Triple</option>
+              <option value="Quad">Quad</option>
             </select>
 
             <input type="number" name="NoofRoom" placeholder="Number of Rooms">
+
 
 
             <select name="Meal" class="selectinput">
@@ -381,11 +403,62 @@ if ($usermail == true) {
             }
           }
         } ?>
-
       </div>
 
     </div>
   </section>
+
+
+  <!-- feedback form-->
+  <div id="feedbackpanel" class="guestdetailpanel">
+    <form method="POST" class="guestdetailpanelform">
+
+      <div class="form-step active">
+        <h4>Customer Feedback</h4>
+
+        <button type="button" class="btn btn-outline-secondary w-100 mt-2" onclick="closeFeedback()">
+          Back
+        </button>
+
+        <input type="text" name="fb_name" placeholder="Your Name" required>
+        <input type="email" name="fb_email" placeholder="Your Email" required>
+
+        <select name="fb_rating" required class="selectinput">
+          <option value="">Rating</option>
+          <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+          <option value="4">⭐⭐⭐⭐ Very Good</option>
+          <option value="3">⭐⭐⭐ Good</option>
+          <option value="2">⭐⭐ Fair</option>
+          <option value="1">⭐ Poor</option>
+        </select>
+
+        <textarea name="fb_message" placeholder="Write your feedback here..." rows="4" required></textarea>
+
+        <button class="btn btn-success mt-3" name="submitfeedback">
+          Submit Feedback
+        </button>
+
+      </div>
+    </form>
+
+    <?php
+    if (isset($_POST['submitfeedback'])) {
+      $fb_name = $_POST['fb_name'];
+      $fb_email = $_POST['fb_email'];
+      $fb_rating = $_POST['fb_rating'];
+      $fb_message = $_POST['fb_message'];
+
+      $sql = "INSERT INTO `feedback`(`user_id`,`fb_name`, `fb_email`, `fb_rating`, `fb_msg`) 
+      VALUES ('$user_id' ,'$fb_name','$fb_email','$fb_rating','$fb_message')";
+      $result = mysqli_query($conn, $sql);
+      if ($result) {
+        echo "<script>swal({ title: 'Feedback submitted successfully', icon: 'success', }); </script>";
+      } else {
+        echo "<script>swal({ title: 'Something went wrong', icon: 'error', }); </script>";
+      }
+    }
+    ?>
+  </div>
 
   <section id="secondsection">
     <img src="./image/homeanimatebg.svg">
@@ -485,6 +558,11 @@ if ($usermail == true) {
     </div>
   </section>
 
+
+
+
+
+
 </body>
 
 <script>
@@ -516,6 +594,16 @@ if ($usermail == true) {
     // always return to step 1
     document.getElementById("step2").classList.remove("active");
     document.getElementById("step1").classList.add("active");
+  }
+
+  var feedbackpanel = document.getElementById("feedbackpanel");
+
+  function openFeedback() {
+    feedbackpanel.style.display = "flex";
+  }
+
+  function closeFeedback() {
+    feedbackpanel.style.display = "none";
   }
 </script>
 

@@ -60,7 +60,7 @@
             ?>
                 <tr>
                     <td><?php echo $res['id'] ?></td>
-                    <td><?php echo $res['Name']?></td>
+                    <td><?php echo $res['Name'] ?></td>
                     <td><?php echo $res['RoomType'] ?></td>
                     <td><?php echo $res['Bed'] ?></td>
 					<td><?php echo $res['cin'] ?></td>

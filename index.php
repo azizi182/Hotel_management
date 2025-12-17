@@ -77,7 +77,13 @@ function prepareAndExecute($conn, $sql, $params)
                     $result = $stmt->get_result();
 
                     if ($result->num_rows > 0) {
-                        $_SESSION['usermail'] = $email;
+                        $row = $result->fetch_assoc();
+                        $_SESSION['user_id'] = $row['UserID'];
+                        $_SESSION['usermail'] = $row['Email'];
+                        $_SESSION['userfirstname'] = $row['firstname'];
+                        $_SESSION['userlastname'] = $row['lastname'];
+
+
                         header("Location: home.php");
                         exit();
                     } else {
@@ -149,7 +155,7 @@ function prepareAndExecute($conn, $sql, $params)
                 $password = $_POST['Password'];
                 $cpassword = $_POST['CPassword'];
 
-                if ($firstname == "" || $email == "" || $password == "" || $lastname =="" || $phone == "") {
+                if ($firstname == "" || $email == "" || $password == "" || $lastname == "" || $phone == "") {
                     echo "<script>swal({ title: 'Fill the proper details', icon: 'error', });</script>";
                 } else {
                     if ($password == $cpassword) {

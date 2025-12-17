@@ -385,7 +385,7 @@
 
 	$id = $_GET['id'];
 
-	$sql = "select * from payment where id = '$id' ";
+	$sql = "SELECT * from payment where id = '$id' ";
 	$re = mysqli_query($conn, $sql);
 	while ($row = mysqli_fetch_array($re)) {
 		$id = $row['id'];

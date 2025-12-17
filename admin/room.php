@@ -38,7 +38,6 @@ include '../config.php';
                 <option value="Double">Double</option>
                 <option value="Queen">Queen</option>
                 <option value="Triple">Triple</option>
-
                 <option value="Quad">Quad</option>
 
             </select>
