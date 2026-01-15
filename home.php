@@ -3,18 +3,137 @@
 
 include 'config.php';
 session_start();
+$message = "";
+$status = "";
+
+if (isset($_GET['success_submit'])) {
+  $status = "success";
+  $message = "Booking submitted successfully!";
+}
+
 
 if (!isset($_SESSION['usermail'], $_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit();
+  header("Location: index.php");
+  exit();
 }
+
 
 $usermail   = $_SESSION['usermail'];
 $user_id    = $_SESSION['user_id'];
 $firstname  = $_SESSION['userfirstname'];
 $lastname   = $_SESSION['userlastname'];
 
+//insert book
+if (isset($_POST['guestdetailsubmit'])) {
+  $firstname = $_POST['firstname'];
+  $lastname = $_POST['lastname'];
+  $icnumber = $_POST['icnumber'];
+  $dob = $_POST['dob'];
+  $Country = $_POST['Country'];
+  $occupation = $_POST['occupation'];
+  $Email = $_POST['Email'];
+  $Phone = $_POST['Phone'];
+  $address = $_POST['address'];
+  $city = $_POST['city'];
+  $state = $_POST['state'];
+  $postcode = $_POST['postcode'];
+  $Emergcontname = $_POST['Emergcontname'];
+  $Emergcontphone = $_POST['Emergcontphone'];
 
+  $adult = $_POST['adult'];
+  $children = $_POST['children'];
+  $RoomType = $_POST['RoomType'];
+  $Bed = $_POST['Bed'];
+  $NoofRoom = $_POST['NoofRoom'];
+  $Meal = $_POST['Meal'];
+  $smoke = $_POST['smoke'];
+  $arrival_time = $_POST['arrival_time'];
+  $departure_time = $_POST['departure_time'];
+  $special_request = $_POST['special_request'];
+  $promo_code = $_POST['promo_code'];
+  $cin = $_POST['cin'];
+  $cout = $_POST['cout'];
+
+
+  // ===== Guest Info Validation =====
+  if (!isAlpha($firstname, 3)) {
+
+    $status = "error";
+    $message = "First name must contain only letters (min 3 characters)";
+  } else if (!isAlpha($lastname, 3)) {
+    $status = "error";
+    $message = "Last name must contain only letters (min 3 characters)";
+  } else if (!isEmailValid($Email)) {
+    $status = "error";
+    $message = "Invalid email format";
+  } else if (!isPhone($Phone)) {
+    $status = "error";
+    $message = "Phone number must be 10–15 digits";
+  } else if (!isAlpha($Country, 3)) {
+    $status = "error";
+    $message = "Country must contain only letters";
+  } else if ($icnumber !== "" && !isNumericLen($icnumber, 6)) {
+    $message = "IC / Passport number must be numeric (min 6 digits)";
+  } else if (!isNumericLen($adult, 1)) {
+    $status = "error";
+    $message = "Number of adults is required";
+  } else if (!isNumericLen($NoofRoom, 1)) {
+    $status = "error";
+    $message = "Number of rooms is required";
+  } else if ($cin == "" || $cout == "" || strtotime($cin) >= strtotime($cout)) {
+    $status = "error";
+    $message = "Check-out date must be after check-in date";
+  } else if (empty($RoomType)) {
+    $status = "error";
+    $message = "Please select a room type";
+  } else if (empty($Meal)) {
+    $status = "error";
+    $message = "Please select a meal option";
+  } else if (empty($smoke)) {
+    $status = "error";
+    $message = "Please select smoking preference";
+  } else {
+    $sta = "NotConfirm";
+    $sql = "INSERT INTO `roombook`(`firstname`, `lastname`, `icnumber`, `dob`, `Country`, `occupation`, `Email`, `Phone`, `address`, `city`, `state`, `postcode`, `Emergcontname`, `Emergcontphone`, 
+            `adult`, `children`, `RoomType`, `Bed`, `NoofRoom`, `Meal`, `smoke`, `arrival_time`, `departure_time`, `special_request`, `promo_code`, `cin`, `cout`, `nodays`, `stat`) 
+            VALUES ('$firstname','$lastname','$icnumber','$dob','$Country','$occupation','$Email','$Phone','$address','$city','$state','$postcode','$Emergcontname','$Emergcontphone',
+            '$adult','$children','$RoomType','$Bed','$NoofRoom','$Meal','$smoke','$arrival_time','$departure_time','$special_request','$promo_code','$cin','$cout',datediff('$cout','$cin'),'$sta')";
+
+
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+      die("SQL Error: " . mysqli_error($conn));
+    }
+
+    if ($result) {
+      header("Location: home.php?success_submit=1");
+      exit();
+    } else {
+      echo "<script>alert('Error submitting report: " . mysqli_error($conn) . "' }); </script>";
+    }
+  }
+}
+
+//validation
+function isAlpha($value, $min = 3)
+{
+  return preg_match("/^[a-zA-Z\s]{{$min},}$/", $value);
+}
+
+function isNumericLen($value, $min = 1)
+{
+  return preg_match("/^[0-9]{{$min},}$/", $value);
+}
+
+function isPhone($value)
+{
+  return preg_match("/^[0-9]{10,15}$/", $value);
+}
+
+function isEmailValid($value)
+{
+  return filter_var($value, FILTER_VALIDATE_EMAIL);
+}
 
 
 
@@ -225,6 +344,52 @@ $lastname   = $_SESSION['userlastname'];
       align-items: center;
       justify-content: center;
     }
+
+    /* ===== MODAL POPUP ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .modal-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      width: 350px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .modal-box.success {
+      border-top: 6px solid #28a745;
+    }
+
+    .modal-box.error {
+      border-top: 6px solid #dc3545;
+    }
+
+    .modal-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .modal-box button {
+      margin-top: 15px;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #0d6efd;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -354,59 +519,11 @@ $lastname   = $_SESSION['userlastname'];
           </div>
         </form>
 
-        <!-- ==== room book php ====-->
-        <?php if (isset($_POST['guestdetailsubmit'])) {
-          $firstname = $_POST['firstname'];
-          $lastname = $_POST['lastname'];
-          $icnumber = $_POST['icnumber'];
-          $dob = $_POST['dob'];
-          $Country = $_POST['Country'];
-          $occupation = $_POST['occupation'];
-          $Email = $_POST['Email'];
-          $Phone = $_POST['Phone'];
-          $address = $_POST['address'];
-          $city = $_POST['city'];
-          $state = $_POST['state'];
-          $postcode = $_POST['postcode'];
-          $Emergcontname = $_POST['Emergcontname'];
-          $Emergcontphone = $_POST['Emergcontphone'];
-
-          $adult = $_POST['adult'];
-          $children = $_POST['children'];
-          $RoomType = $_POST['RoomType'];
-          $Bed = $_POST['Bed'];
-          $NoofRoom = $_POST['NoofRoom'];
-          $Meal = $_POST['Meal'];
-          $smoke = $_POST['smoke'];
-          $arrival_time = $_POST['arrival_time'];
-          $departure_time = $_POST['departure_time'];
-          $special_request = $_POST['special_request'];
-          $promo_code = $_POST['promo_code'];
-          $cin = $_POST['cin'];
-          $cout = $_POST['cout'];
-
-          if ($firstname == "" || $Email == "" || $Country == "") {
-            echo "<script>swal({ title: 'Fill the proper details', icon: 'error', }); </script>";
-          } else {
-            $sta = "NotConfirm";
-            $sql = "INSERT INTO `roombook`(`firstname`, `lastname`, `icnumber`, `dob`, `Country`, `occupation`, `Email`, `Phone`, `address`, `city`, `state`, `postcode`, `Emergcontname`, `Emergcontphone`, 
-            `adult`, `children`, `RoomType`, `Bed`, `NoofRoom`, `Meal`, `smoke`, `arrival_time`, `departure_time`, `special_request`, `promo_code`, `cin`, `cout`, `nodays`, `stat`) 
-            VALUES ('$firstname','$lastname','$icnumber','$dob','$Country','$occupation','$Email','$Phone','$address','$city','$state','$postcode','$Emergcontname','$Emergcontphone',
-            '$adult','$children','$RoomType','$Bed','$NoofRoom','$Meal','$smoke','$arrival_time','$departure_time','$special_request','$promo_code','$cin','$cout',datediff('$cout','$cin'),'$sta')";
-
-
-            $result = mysqli_query($conn, $sql);
-            if ($result) {
-              echo "<script>swal({ title: 'Reservation successful', icon: 'success', }); </script>";
-            } else {
-              echo "<script>swal({ title: 'Something went wrong', icon: 'error', }); </script>";
-            }
-          }
-        } ?>
       </div>
 
     </div>
   </section>
+
 
 
   <!-- feedback form-->
@@ -558,6 +675,18 @@ $lastname   = $_SESSION['userlastname'];
     </div>
   </section>
 
+  <?php if (!empty($message)): ?>
+    <div class="modal-overlay">
+      <div class="modal-box <?= $status === 'success' ? 'success' : 'error' ?>">
+        <div class="modal-icon">
+          <?= $status === 'success' ? '✔' : '❌' ?>
+        </div>
+        <p><?= htmlspecialchars($message) ?></p>
+        <button onclick="closePopup()">OK</button>
+      </div>
+    </div>
+  <?php endif; ?>
+
 
 
 
@@ -566,6 +695,10 @@ $lastname   = $_SESSION['userlastname'];
 </body>
 
 <script>
+  function closePopup() {
+    document.querySelector('.modal-overlay').style.display = 'none';
+  }
+
   var bookbox = document.getElementById("guestdetailpanel");
 
   openbookbox = () => {
@@ -575,10 +708,40 @@ $lastname   = $_SESSION['userlastname'];
     bookbox.style.display = "none";
   }
 
+
   function nextStep() {
+    const step1 = document.getElementById("step1");
+    const inputs = step1.querySelectorAll("input");
+
+    let hasError = false;
+
+    inputs.forEach(input => {
+      // Skip buttons
+      if (input.type === "button" || input.type === "submit") return;
+
+      if (input.value.trim() === "") {
+        hasError = true;
+        input.style.border = "2px solid red";
+      } else {
+        input.style.border = "1px solid #ccc";
+      }
+    });
+
+    if (hasError) {
+      swal({
+        title: "Incomplete Information",
+        text: "Please fill all Guest Information fields before proceeding.",
+        icon: "error"
+      });
+      return; // ⛔ STOP HERE
+    }
+
+    // ✅ All fields filled → go to step 2
     document.getElementById("step1").classList.remove("active");
     document.getElementById("step2").classList.add("active");
   }
+
+
 
   function prevStep() {
     document.getElementById("step2").classList.remove("active");
